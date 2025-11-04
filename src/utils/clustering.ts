@@ -1,4 +1,4 @@
-import { EmotionData, EmotionType, emotionWeatherMap } from '../types/emotion';
+import { EmotionData, EmotionType } from '../types/emotion';
 
 export interface ClusterData {
   id: string;

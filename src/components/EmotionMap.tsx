@@ -11,7 +11,7 @@ import { loadEmotions, addEmotion, saveEmotions, exportToJSON, clearAllEmotions 
 import { getCurrentLocation } from '../utils/geolocation';
 import { clusterEmotions, ClusterData } from '../utils/clustering';
 import { generate100MockData, generate5000MockData } from '../data/generateMockData';
-import { startRealtimeSync, stopRealtimeSync, broadcastUpdate, listenToBroadcast, exportFullJSON, importFromJSON } from '../utils/realtimeSync';
+import { startRealtimeSync, stopRealtimeSync, broadcastUpdate, listenToBroadcast, importFromJSON } from '../utils/realtimeSync';
 import { fetchEmotions, addEmotionToServer, uploadAllEmotions, deleteAllEmotions } from '../utils/api';
 import 'leaflet/dist/leaflet.css';
 
