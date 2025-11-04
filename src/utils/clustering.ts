@@ -60,18 +60,21 @@ const calculateAverageIntensity = (emotions: EmotionData[]): number => {
 };
 
 // ズームレベルに応じたクラスタリング距離を取得（km）
+// 視覚的に重なる場合のみクラスタリングするため、非常に狭い範囲に設定
 const getClusterDistance = (zoom: number): number => {
-  if (zoom >= 13) return 0; // ズーム13以上は個別表示
-  if (zoom >= 12) return 3; // 3km圏内をクラスタリング
-  if (zoom >= 11) return 5; // 5km圏内をクラスタリング
-  if (zoom >= 10) return 8; // 8km圏内をクラスタリング
-  if (zoom >= 9) return 12; // 12km圏内をクラスタリング
-  if (zoom >= 8) return 18; // 18km圏内をクラスタリング
-  if (zoom >= 7) return 25; // 25km圏内をクラスタリング
-  if (zoom >= 6) return 35; // 35km圏内をクラスタリング
-  if (zoom >= 5) return 48; // 48km圏内をクラスタリング
-  if (zoom >= 4) return 65; // 65km圏内をクラスタリング
-  return 85; // 85km圏内をクラスタリング
+  if (zoom >= 15) return 0; // ズーム15以上は完全に個別表示
+  if (zoom >= 14) return 0.5; // 0.5km = 500m（非常に近い場合のみ）
+  if (zoom >= 13) return 1; // 1km
+  if (zoom >= 12) return 2; // 2km
+  if (zoom >= 11) return 3; // 3km
+  if (zoom >= 10) return 5; // 5km
+  if (zoom >= 9) return 8; // 8km
+  if (zoom >= 8) return 12; // 12km
+  if (zoom >= 7) return 18; // 18km
+  if (zoom >= 6) return 25; // 25km
+  if (zoom >= 5) return 35; // 35km
+  if (zoom >= 4) return 50; // 50km
+  return 70; // 70km（最小ズームでも狭い範囲）
 };
 
 // データをクラスタリング
