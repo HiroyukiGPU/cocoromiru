@@ -47,16 +47,43 @@ export const EmotionMap: React.FC = () => {
         // サーバーモード：APIから取得
         try {
           const serverData = await fetchEmotions();
-          setEmotionData(serverData);
+          // データが空の場合は5000人分のデータを生成
+          if (serverData.length === 0) {
+            console.log('初期データを生成中...（5000人分）');
+            const mockData = generate5000MockData();
+            await uploadAllEmotions(mockData);
+            const updatedData = await fetchEmotions();
+            setEmotionData(updatedData);
+          } else {
+            setEmotionData(serverData);
+          }
         } catch (error) {
           console.error('サーバーからのデータ取得失敗、LocalStorageを使用');
           const localData = loadEmotions();
-          setEmotionData(localData);
+          // ローカルデータも空の場合は5000人分のデータを生成
+          if (localData.length === 0) {
+            console.log('初期データを生成中...（5000人分）');
+            const mockData = generate5000MockData();
+            saveEmotions(mockData);
+            setEmotionData(mockData);
+            broadcastUpdate(mockData);
+          } else {
+            setEmotionData(localData);
+          }
         }
       } else {
         // ローカルモード：LocalStorageから取得
         const loadedData = loadEmotions();
-        setEmotionData(loadedData);
+        // データが空の場合は5000人分のデータを生成
+        if (loadedData.length === 0) {
+          console.log('初期データを生成中...（5000人分）');
+          const mockData = generate5000MockData();
+          saveEmotions(mockData);
+          setEmotionData(mockData);
+          broadcastUpdate(mockData);
+        } else {
+          setEmotionData(loadedData);
+        }
       }
     };
 
@@ -344,7 +371,8 @@ export const EmotionMap: React.FC = () => {
       {/* 凡例 */}
       <EmotionLegend />
 
-      {/* 統計情報 */}
+      {/* 統計情報 - 非表示 */}
+      {false && (
       <div
         className="stats-panel glass-effect card-hover"
         style={{
@@ -658,6 +686,7 @@ export const EmotionMap: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* プラスボタン */}
       <AddEmotionButton onClick={() => setShowInputForm(true)} />

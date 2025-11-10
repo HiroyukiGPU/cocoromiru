@@ -16,7 +16,7 @@ export const EmotionLegend: React.FC = () => {
         borderRadius: '20px',
         padding: '16px',
         maxWidth: 'calc(100vw - 40px)',
-        zIndex: 100,
+        zIndex: 1000,
       }}
     >
       <button
