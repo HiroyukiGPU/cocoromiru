@@ -11,8 +11,8 @@ interface ClusterMarkerProps {
 
 export const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onClick }) => {
   const weather = emotionWeatherMap[cluster.averageEmotion];
-  const baseSize = 25;
-  const size = baseSize + Math.min(cluster.count * 2, 50); // 25px〜75px（人数に応じて大きくなる）
+  // 固定サイズ（人数やズームレベルに関係なく同じサイズ）
+  const size = 28;
 
   // カスタムアイコンを作成（四角形）
   const customIcon = new DivIcon({
