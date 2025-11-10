@@ -30,7 +30,6 @@ export const AddEmotionButton: React.FC<AddEmotionButtonProps> = ({ onClick }) =
         justifyContent: 'center',
         touchAction: 'manipulation',
         WebkitTapHighlightColor: 'transparent',
-        position: 'relative',
         overflow: 'hidden',
       }}
       onMouseEnter={(e) => {

@@ -7,12 +7,12 @@ import { EmotionDetail } from './EmotionDetail';
 import { EmotionLegend } from './EmotionLegend';
 import { AddEmotionButton } from './AddEmotionButton';
 import { EmotionInputForm } from './EmotionInputForm';
-import { loadEmotions, addEmotion, saveEmotions, exportToJSON, clearAllEmotions } from '../utils/emotionStorage';
+import { loadEmotions, addEmotion, saveEmotions } from '../utils/emotionStorage';
 import { getCurrentLocation } from '../utils/geolocation';
 import { clusterEmotions, ClusterData } from '../utils/clustering';
-import { generate100MockData, generate5000MockData } from '../data/generateMockData';
-import { startRealtimeSync, stopRealtimeSync, broadcastUpdate, listenToBroadcast, importFromJSON } from '../utils/realtimeSync';
-import { fetchEmotions, addEmotionToServer, uploadAllEmotions, deleteAllEmotions } from '../utils/api';
+import { generate5000MockData } from '../data/generateMockData';
+import { startRealtimeSync, stopRealtimeSync, broadcastUpdate, listenToBroadcast } from '../utils/realtimeSync';
+import { fetchEmotions, addEmotionToServer, uploadAllEmotions } from '../utils/api';
 import 'leaflet/dist/leaflet.css';
 
 // ズームレベルを監視するコンポーネント
@@ -38,7 +38,7 @@ export const EmotionMap: React.FC = () => {
   const [zoom, setZoom] = useState(6);
   const [clusters, setClusters] = useState<ClusterData[]>([]);
   const [individuals, setIndividuals] = useState<EmotionData[]>([]);
-  const [useServer, setUseServer] = useState(false); // サーバーモード切替
+  const [useServer] = useState(false); // サーバーモード切替
 
   useEffect(() => {
     // データの読み込み
@@ -180,104 +180,6 @@ export const EmotionMap: React.FC = () => {
     }
   };
 
-  const handleExportJSON = () => {
-    exportToJSON(emotionData);
-  };
-
-  const handleClearData = async () => {
-    if (window.confirm('すべてのデータを削除しますか？\nこの操作は取り消せません。')) {
-      if (useServer) {
-        await deleteAllEmotions();
-        const serverData = await fetchEmotions();
-        setEmotionData(serverData);
-      } else {
-        clearAllEmotions();
-        setEmotionData([]);
-        broadcastUpdate([]);
-      }
-      alert('すべてのデータを削除しました');
-    }
-  };
-
-  const uploadLocalToServer = async () => {
-    if (confirm(`現在のローカルデータ（${emotionData.length}件）をサーバーにアップロードしますか？`)) {
-      try {
-        await uploadAllEmotions(emotionData);
-        alert('サーバーにアップロードしました！');
-      } catch (error) {
-        alert('アップロードに失敗しました。サーバーが起動しているか確認してください。');
-      }
-    }
-  };
-
-  const handleGenerate100Data = async () => {
-    if (window.confirm('100人分のサンプルデータを生成しますか？\n既存のデータは上書きされます。')) {
-      const mockData = generate100MockData();
-      
-      if (useServer) {
-        await uploadAllEmotions(mockData);
-        const serverData = await fetchEmotions();
-        setEmotionData(serverData);
-      } else {
-        saveEmotions(mockData);
-        setEmotionData(mockData);
-        broadcastUpdate(mockData);
-      }
-      
-      alert('100人分のデータを生成しました！');
-    }
-  };
-
-  const handleGenerate5000Data = async () => {
-    if (window.confirm('5000人分のサンプルデータを生成しますか？\n既存のデータは上書きされます。\n※生成に数秒かかる場合があります。')) {
-      const startTime = Date.now();
-      console.log('5000人分のデータ生成を開始...');
-      
-      // 少し遅延を入れてUIを更新
-      setTimeout(async () => {
-        const mockData = generate5000MockData();
-        
-        if (useServer) {
-          await uploadAllEmotions(mockData);
-          const serverData = await fetchEmotions();
-          setEmotionData(serverData);
-        } else {
-          saveEmotions(mockData);
-          setEmotionData(mockData);
-          broadcastUpdate(mockData);
-        }
-        
-        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
-        console.log(`5000人分のデータ生成完了: ${elapsedTime}秒`);
-        alert(`5000人分のデータを生成しました！\n生成時間: ${elapsedTime}秒`);
-      }, 100);
-    }
-  };
-
-  const handleImportJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        const importedData = await importFromJSON(file);
-        
-        if (useServer) {
-          await uploadAllEmotions(importedData);
-          const serverData = await fetchEmotions();
-          setEmotionData(serverData);
-        } else {
-          saveEmotions(importedData);
-          setEmotionData(importedData);
-          broadcastUpdate(importedData);
-        }
-        
-        alert(`${importedData.length}件のデータをインポートしました！`);
-      } catch (error: any) {
-        alert(error.message);
-      }
-    }
-    // ファイル入力をリセット
-    event.target.value = '';
-  };
 
   return (
     <div
