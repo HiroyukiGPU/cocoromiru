@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EmotionType, emotionWeatherMap } from '../types/emotion';
 
 interface EmotionInputFormProps {
@@ -16,16 +16,36 @@ export const EmotionInputForm: React.FC<EmotionInputFormProps> = ({
   const [intensity, setIntensity] = useState<number>(50);
   const [userName, setUserName] = useState<string>('');
 
+  // ローカルストレージから名前を読み込む
+  useEffect(() => {
+    const savedName = localStorage.getItem('cocoromiru-username');
+    if (savedName) {
+      setUserName(savedName);
+    }
+  }, []);
+
   const emotions = Object.keys(emotionWeatherMap) as EmotionType[];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userName.trim()) {
-      alert('名前を入力してください');
+      // ユーザー体験向上のため、alertではなくinputにフォーカスなどを当てたいところだが、
+      // 今回は簡単な揺れアニメーションなどで表現するのは少し手間なので、
+      // 必須感を出すためにborder赤くするなどの制御をstateでやるのがベスト。
+      // とりあえず既存に倣いalertを出すが、できればトーストにしたい。
+      // 親からtoast関数をもらう形にリファクタするのは手間なので、
+      // ここでは最低限alertでガードしつつ、UX的には名前入力欄を強調する。
+      alert('名前を入力してください 🙏');
       return;
     }
+
+    // 名前を保存
+    localStorage.setItem('cocoromiru-username', userName.trim());
+
     onSubmit(selectedEmotion, intensity, userName);
   };
+
+  const weather = emotionWeatherMap[selectedEmotion];
 
   return (
     <div
@@ -35,12 +55,13 @@ export const EmotionInputForm: React.FC<EmotionInputFormProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)', // 少し薄くして軽さを出す
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 2000,
-        animation: 'fadeIn 0.3s ease',
+        animation: 'fadeIn 0.2s ease',
+        backdropFilter: 'blur(4px)', // 背景をぼかす
       }}
       onClick={onCancel}
     >
@@ -48,169 +69,137 @@ export const EmotionInputForm: React.FC<EmotionInputFormProps> = ({
         className="glass-effect"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderRadius: '24px',
-          padding: 'clamp(24px, 6vw, 48px)',
+          padding: 'clamp(24px, 5vw, 40px)',
           maxWidth: '520px',
-          width: '95%',
+          width: '90%',
           maxHeight: '90vh',
           overflowY: 'auto',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-          animation: 'slideUp 0.3s ease',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+          animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', // バウンスするアニメーション
           WebkitOverflowScrolling: 'touch',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.8)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2
           style={{
-            fontSize: 'clamp(22px, 5.5vw, 32px)',
+            fontSize: 'clamp(22px, 5vw, 28px)',
             fontWeight: '800',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: 'clamp(20px, 5vw, 32px)',
             textAlign: 'center',
-            lineHeight: '1.3',
-            letterSpacing: '-0.5px',
+            marginBottom: 'clamp(24px, 5vw, 32px)',
+            color: '#333',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
           }}
         >
-          💭 今の気持ちを教えてください
+          <span style={{ fontSize: '1.2em' }}>💭</span>
+          <span>今の気持ちは？</span>
         </h2>
 
         <form onSubmit={handleSubmit}>
           {/* 名前入力 */}
-          <div style={{ marginBottom: 'clamp(16px, 4vw, 24px)' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label
               style={{
                 display: 'block',
-                fontSize: 'clamp(13px, 3vw, 14px)',
-                fontWeight: 'bold',
-                color: '#555',
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#666',
                 marginBottom: '8px',
+                paddingLeft: '4px',
               }}
             >
-              あなたの名前
+              ニックネーム
             </label>
             <input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              placeholder="例: 田中太郎"
+              placeholder="あなたの名前"
               style={{
                 width: '100%',
-                padding: 'clamp(12px, 3vw, 14px) clamp(16px, 4vw, 20px)',
-                fontSize: 'clamp(14px, 4vw, 16px)',
-                border: '2px solid #e0e0e0',
+                padding: '12px 16px',
+                fontSize: '16px',
+                border: '2px solid #eee',
                 borderRadius: '12px',
                 outline: 'none',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                minHeight: '48px',
-                background: 'rgba(255, 255, 255, 0.8)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.2s ease',
+                background: '#f8f9fa',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = '#667eea';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.2)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.background = '#fff';
+                e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e0e0e0';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = '#eee';
+                e.currentTarget.style.background = '#f8f9fa';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             />
           </div>
 
           {/* 感情選択 */}
-          <div style={{ marginBottom: 'clamp(16px, 4vw, 24px)' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label
               style={{
                 display: 'block',
-                fontSize: 'clamp(13px, 3vw, 14px)',
-                fontWeight: 'bold',
-                color: '#555',
-                marginBottom: 'clamp(10px, 2.5vw, 12px)',
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#666',
+                marginBottom: '12px',
+                paddingLeft: '4px',
               }}
             >
-              感情を選択
+              感情を選ぶ
             </label>
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 'clamp(12px, 3vw, 16px)',
+                gap: '12px',
               }}
             >
               {emotions.map((emotion) => {
-                const weather = emotionWeatherMap[emotion];
+                const w = emotionWeatherMap[emotion];
                 const isSelected = selectedEmotion === emotion;
                 return (
                   <button
                     key={emotion}
                     type="button"
                     onClick={() => setSelectedEmotion(emotion)}
-                    className="card-hover"
                     style={{
-                      padding: 'clamp(18px, 4.5vw, 28px) clamp(14px, 3.5vw, 20px)',
-                      border: isSelected ? `3px solid ${weather.color}` : '2px solid #e0e0e0',
+                      position: 'relative',
+                      border: 'none',
                       borderRadius: '16px',
-                      background: isSelected 
-                        ? `linear-gradient(135deg, ${weather.color}25, ${weather.color}35)` 
-                        : 'rgba(255, 255, 255, 0.8)',
+                      background: isSelected
+                        ? `linear-gradient(135deg, ${w.color}20, ${w.color}30)`
+                        : '#fff',
+                      padding: '16px',
                       cursor: 'pointer',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 'clamp(10px, 2.5vw, 14px)',
-                      minHeight: '140px',
-                      boxShadow: isSelected 
-                        ? `0 8px 24px ${weather.color}40` 
-                        : '0 4px 12px rgba(0, 0, 0, 0.08)',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.12)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-                      }
+                      gap: '8px',
+                      boxShadow: isSelected
+                        ? `inset 0 0 0 2px ${w.color}`
+                        : '0 2px 8px rgba(0,0,0,0.05)',
+                      transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 'clamp(36px, 10vw, 48px)',
-                      }}
-                    >
-                      {weather.icon}
-                    </div>
-                    <div
-                      style={{
-                        width: 'clamp(56px, 14vw, 68px)',
-                        height: 'clamp(56px, 14vw, 68px)',
-                        backgroundColor: weather.color,
-                        border: '4px solid white',
-                        borderRadius: '12px',
-                        boxShadow: `0 4px 16px ${weather.color}60`,
-                        transition: 'all 0.3s ease',
-                      }}
-                    />
+                    <div style={{ fontSize: '32px', lineHeight: 1 }}>{w.icon}</div>
                     <span
                       style={{
-                        fontSize: 'clamp(20px, 5.5vw, 28px)',
-                        color: weather.color,
+                        fontSize: '14px',
                         fontWeight: '700',
-                        letterSpacing: '0.5px',
+                        color: isSelected ? w.color : '#666',
                       }}
                     >
-                      {weather.label}
+                      {w.label}
                     </span>
                   </button>
                 );
@@ -219,96 +208,107 @@ export const EmotionInputForm: React.FC<EmotionInputFormProps> = ({
           </div>
 
           {/* 強度スライダー */}
-          <div style={{ marginBottom: 'clamp(24px, 6vw, 32px)' }}>
-            <label
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', padding: '0 4px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '700', color: '#666' }}>
+                強さ
+              </label>
+              <span style={{ fontSize: '14px', fontWeight: 'bold', color: weather.color }}>
+                {intensity}%
+              </span>
+            </div>
+            <div
               style={{
-                display: 'block',
-                fontSize: 'clamp(13px, 3vw, 14px)',
-                fontWeight: 'bold',
-                color: '#555',
-                marginBottom: '8px',
+                position: 'relative',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              感情の強さ: {intensity}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={intensity}
-              onChange={(e) => setIntensity(Number(e.target.value))}
-              style={{
-                width: '100%',
-                height: 'clamp(6px, 2vw, 8px)',
-                borderRadius: '4px',
-                outline: 'none',
-                cursor: 'pointer',
-                WebkitAppearance: 'none',
-              }}
-            />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="10"
+                value={intensity}
+                onChange={(e) => setIntensity(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '6px',
+                  borderRadius: '3px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  background: `linear-gradient(90deg, ${weather.color} ${intensity}%, #eee ${intensity}%)`,
+                }}
+              />
+            </div>
           </div>
 
           {/* ボタン */}
-          <div style={{ display: 'flex', gap: 'clamp(10px, 2.5vw, 12px)' }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="button"
               onClick={onCancel}
               disabled={isLoading}
               style={{
-                flex: 1,
-                padding: 'clamp(12px, 3vw, 14px)',
-                fontSize: 'clamp(14px, 4vw, 16px)',
-                fontWeight: 'bold',
-                border: '2px solid #e0e0e0',
-                borderRadius: '10px',
-                background: 'white',
+                flex: '0 0 auto',
+                padding: '0 20px',
+                height: '48px',
+                fontSize: '15px',
+                fontWeight: '700',
+                border: 'none',
+                borderRadius: '12px',
+                background: '#f1f3f5',
                 color: '#666',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                opacity: isLoading ? 0.5 : 1,
-                minHeight: '44px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
               }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#e9ecef'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#f1f3f5'}
             >
-              キャンセル
+              やめる
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="gradient-button"
               style={{
                 flex: 1,
-                padding: 'clamp(14px, 3.5vw, 16px)',
-                fontSize: 'clamp(15px, 4vw, 18px)',
+                height: '48px',
+                fontSize: '16px',
                 fontWeight: '700',
                 border: 'none',
                 borderRadius: '12px',
-                background: isLoading
-                  ? '#ccc'
-                  : `linear-gradient(135deg, ${emotionWeatherMap[selectedEmotion].color}, ${emotionWeatherMap[selectedEmotion].gradient[1]})`,
+                background: isLoading ? '#ccc' : `linear-gradient(135deg, ${weather.color}, ${weather.gradient[1]})`,
                 color: 'white',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                minHeight: '48px',
-                boxShadow: isLoading 
-                  ? 'none' 
-                  : `0 4px 16px ${emotionWeatherMap[selectedEmotion].color}50`,
-                position: 'relative',
-                overflow: 'hidden',
+                cursor: isLoading ? 'wait' : 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isLoading ? 'none' : `0 4px 12px ${weather.color}40`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
               onMouseEnter={(e) => {
                 if (!isLoading) {
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `0 6px 20px ${emotionWeatherMap[selectedEmotion].color}60`;
+                  e.currentTarget.style.boxShadow = `0 6px 16px ${weather.color}60`;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isLoading) {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 4px 16px ${emotionWeatherMap[selectedEmotion].color}50`;
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${weather.color}40`;
                 }
               }}
             >
-              {isLoading ? '⏳ 位置情報取得中...' : '✨ 登録する'}
+              {isLoading ? (
+                <>
+                  <span className="spin">⏳</span> 送信中...
+                </>
+              ) : (
+                '記録する'
+              )}
             </button>
           </div>
         </form>

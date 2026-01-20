@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
 import { EmotionData, EmotionType } from '../types/emotion';
 import { EmotionMarker } from './EmotionMarker';
@@ -7,6 +7,7 @@ import { EmotionDetail } from './EmotionDetail';
 import { EmotionLegend } from './EmotionLegend';
 import { AddEmotionButton } from './AddEmotionButton';
 import { EmotionInputForm } from './EmotionInputForm';
+import { NotificationContainer, NotificationItem, NotificationType as ToastType } from './Notification';
 import { loadEmotions, addEmotion, saveEmotions } from '../utils/emotionStorage';
 import { getCurrentLocation } from '../utils/geolocation';
 import { clusterEmotions, ClusterData } from '../utils/clustering';
@@ -22,11 +23,11 @@ const ZoomHandler: React.FC<{ onZoomChange: (zoom: number) => void }> = ({ onZoo
       onZoomChange(map.getZoom());
     },
   });
-  
+
   useEffect(() => {
     onZoomChange(map.getZoom());
   }, []);
-  
+
   return null;
 };
 
@@ -34,11 +35,24 @@ export const EmotionMap: React.FC = () => {
   const [emotionData, setEmotionData] = useState<EmotionData[]>([]);
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionData | null>(null);
   const [showInputForm, setShowInputForm] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [zoom, setZoom] = useState(6);
   const [clusters, setClusters] = useState<ClusterData[]>([]);
   const [individuals, setIndividuals] = useState<EmotionData[]>([]);
   const [useServer] = useState(false); // サーバーモード切替
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  // 位置情報の非同期取得用
+  const locationPromiseRef = useRef<Promise<{ location: any; error: any }> | null>(null);
+
+  const addNotification = (type: ToastType, message: string) => {
+    const id = Date.now().toString();
+    setNotifications((prev) => [...prev, { id, type, message }]);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   useEffect(() => {
     // データの読み込み
@@ -92,16 +106,16 @@ export const EmotionMap: React.FC = () => {
     // リアルタイム同期を開始（サーバーモードでも定期取得）
     const syncFunction = useServer
       ? async () => {
-          try {
-            const serverData = await fetchEmotions();
-            setEmotionData(serverData);
-          } catch (error) {
-            console.error('同期エラー:', error);
-          }
+        try {
+          const serverData = await fetchEmotions();
+          setEmotionData(serverData);
+        } catch (error) {
+          console.error('同期エラー:', error);
         }
+      }
       : (updatedEmotions: EmotionData[]) => {
-          setEmotionData(updatedEmotions);
-        };
+        setEmotionData(updatedEmotions);
+      };
 
     if (useServer) {
       // サーバーモード：5秒ごとにポーリング
@@ -130,19 +144,38 @@ export const EmotionMap: React.FC = () => {
     }
   }, [emotionData, zoom]);
 
+  // フォームを開いたタイミングで位置情報取得を開始
+  const handleOpenForm = () => {
+    setShowInputForm(true);
+    // すでに取得中でなければ開始
+    if (!locationPromiseRef.current) {
+      locationPromiseRef.current = getCurrentLocation().finally(() => {
+        // 完了しても参照は保持（再取得しないため）
+        // フォーム閉じた時などにクリアするかは要検討だが、
+        // 短時間での連続投稿ならキャッシュ的に使えて良い
+      });
+    }
+  };
+
   const handleAddEmotion = async (
     emotion: EmotionType,
     intensity: number,
     userName: string
   ) => {
-    setIsLoadingLocation(true);
+    setIsSubmitting(true);
 
     try {
-      // 位置情報を取得
-      const { location, error } = await getCurrentLocation();
+      // 位置情報を待機
+      if (!locationPromiseRef.current) {
+        locationPromiseRef.current = getCurrentLocation();
+      }
+      const { location, error } = await locationPromiseRef.current;
+
+      // 取得後、次はまた新しく取れるようにクリア（あるいは一定時間キャッシュするロジックもアリだが簡易的に）
+      locationPromiseRef.current = null;
 
       if (error) {
-        alert(error);
+        throw new Error(error);
       }
 
       // 新しい感情データを作成
@@ -169,14 +202,17 @@ export const EmotionMap: React.FC = () => {
       }
 
       setShowInputForm(false);
-      setIsLoadingLocation(false);
+      setIsSubmitting(false);
 
-      // 成功メッセージ
-      alert(`感情を登録しました！\n場所: ${location.name}`);
-    } catch (error) {
+      // 成功メッセージ (Notification)
+      addNotification('success', `感情を登録しました！ (${location.name})`);
+
+    } catch (error: any) {
       console.error('感情の登録に失敗:', error);
-      alert('感情の登録に失敗しました');
-      setIsLoadingLocation(false);
+      addNotification('error', error.message || '感情の登録に失敗しました');
+      setIsSubmitting(false);
+      // エラー時はキャッシュクリアして再試行できるようにする
+      locationPromiseRef.current = null;
     }
   };
 
@@ -190,6 +226,8 @@ export const EmotionMap: React.FC = () => {
         position: 'relative',
       }}
     >
+      <NotificationContainer notifications={notifications} onRemove={removeNotification} />
+
       {/* ヘッダー */}
       <div
         className="header-container glass-effect"
@@ -248,7 +286,7 @@ export const EmotionMap: React.FC = () => {
           subdomains="abcd"
           maxZoom={20}
         />
-        
+
         {/* ズームレベルを監視 */}
         <ZoomHandler onZoomChange={setZoom} />
 
@@ -274,14 +312,14 @@ export const EmotionMap: React.FC = () => {
       <EmotionLegend />
 
       {/* プラスボタン */}
-      <AddEmotionButton onClick={() => setShowInputForm(true)} />
+      <AddEmotionButton onClick={handleOpenForm} />
 
       {/* 感情入力フォーム */}
       {showInputForm && (
         <EmotionInputForm
           onSubmit={handleAddEmotion}
           onCancel={() => setShowInputForm(false)}
-          isLoading={isLoadingLocation}
+          isLoading={isSubmitting} // ロケーション取得中ではなく、送信中（または待機中）
         />
       )}
 
@@ -293,3 +331,4 @@ export const EmotionMap: React.FC = () => {
     </div>
   );
 };
+
