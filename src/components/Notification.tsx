@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export type NotificationType = 'success' | 'error' | 'info';
+export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
 export interface NotificationItem {
     id: string;
@@ -82,6 +82,12 @@ const Notification: React.FC<{
                     ...base,
                     icon: '🚨',
                     borderLeft: '4px solid #f56565',
+                };
+            case 'warning':
+                return {
+                    ...base,
+                    icon: '⚠️',
+                    borderLeft: '4px solid #ecc94b',
                 };
             default:
                 return base;

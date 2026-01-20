@@ -179,7 +179,10 @@ export const EmotionMap: React.FC = () => {
       locationPromiseRef.current = null;
 
       if (error) {
-        throw new Error(error);
+        // エラーがあってもデフォルト位置で登録を続行
+        console.warn('位置情報エラー:', error);
+        addNotification('warning', '位置情報が取得できないため、デフォルト位置で登録します');
+        // throw new Error(error); // 以前はここで中断していた
       }
 
       // 新しい感情データを作成
