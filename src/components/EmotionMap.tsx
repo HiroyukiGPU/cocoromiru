@@ -9,7 +9,7 @@ import { AddEmotionButton } from './AddEmotionButton';
 import { EmotionInputForm } from './EmotionInputForm';
 import { NotificationContainer, NotificationItem, NotificationType as ToastType } from './Notification';
 import { loadEmotions, addEmotion, saveEmotions } from '../utils/emotionStorage';
-import { getCurrentLocation } from '../utils/geolocation';
+import { getCurrentLocation, GeolocationResult } from '../utils/geolocation';
 import { clusterEmotions, ClusterData } from '../utils/clustering';
 import { generate5000MockData } from '../data/generateMockData';
 import { startRealtimeSync, stopRealtimeSync, broadcastUpdate, listenToBroadcast } from '../utils/realtimeSync';
@@ -43,7 +43,7 @@ export const EmotionMap: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // 位置情報の非同期取得用
-  const locationPromiseRef = useRef<Promise<{ location: any; error: any }> | null>(null);
+  const locationPromiseRef = useRef<Promise<GeolocationResult> | null>(null);
 
   const addNotification = (type: ToastType, message: string) => {
     const id = Date.now().toString();
@@ -166,10 +166,14 @@ export const EmotionMap: React.FC = () => {
 
     try {
       // 位置情報を待機
-      if (!locationPromiseRef.current) {
-        locationPromiseRef.current = getCurrentLocation();
+      let promise = locationPromiseRef.current;
+      if (!promise) {
+        promise = getCurrentLocation();
+        locationPromiseRef.current = promise;
       }
-      const { location, error } = await locationPromiseRef.current;
+
+      const result = await promise;
+      const { location, error } = result;
 
       // 取得後、次はまた新しく取れるようにクリア（あるいは一定時間キャッシュするロジックもアリだが簡易的に）
       locationPromiseRef.current = null;
@@ -331,4 +335,3 @@ export const EmotionMap: React.FC = () => {
     </div>
   );
 };
-
