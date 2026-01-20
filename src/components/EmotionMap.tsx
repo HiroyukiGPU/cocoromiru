@@ -6,7 +6,7 @@ import { ClusterMarker } from './ClusterMarker';
 import { EmotionDetail } from './EmotionDetail';
 import { EmotionLegend } from './EmotionLegend';
 import { AddEmotionButton } from './AddEmotionButton';
-import { EmotionInputForm } from './EmotionInputForm';
+import { EmotionInputFlow } from './EmotionInputFlow';
 import { NotificationContainer, NotificationItem, NotificationType as ToastType } from './Notification';
 import { loadEmotions, addEmotion, saveEmotions } from '../utils/emotionStorage';
 import { getCurrentLocation, GeolocationResult } from '../utils/geolocation';
@@ -318,12 +318,12 @@ export const EmotionMap: React.FC = () => {
       {/* プラスボタン */}
       <AddEmotionButton onClick={handleOpenForm} />
 
-      {/* 感情入力フォーム */}
+      {/* 感情入力フロー */}
       {showInputForm && (
-        <EmotionInputForm
+        <EmotionInputFlow
           onSubmit={handleAddEmotion}
           onCancel={() => setShowInputForm(false)}
-          isLoading={isSubmitting} // ロケーション取得中ではなく、送信中（または待機中）
+          isLoading={isSubmitting}
         />
       )}
 

@@ -24,6 +24,7 @@ export const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onClick }
         background-color: ${weather.color};
         border: 3px solid white;
         box-shadow: 0 4px 16px ${weather.color}80;
+        border-radius: 50%;
         cursor: pointer;
         transition: all 0.3s ease;
       "></div>
@@ -61,7 +62,7 @@ export const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onClick }
               </div>
             </div>
           </div>
-          
+
           <div style={{ fontSize: '14px', marginBottom: '16px' }}>
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span><strong>人数:</strong></span>
@@ -72,15 +73,15 @@ export const ClusterMarker: React.FC<ClusterMarkerProps> = ({ cluster, onClick }
               <span>{cluster.averageIntensity}%</span>
             </div>
           </div>
-          
+
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '8px' }}>
             💡 ズームインすると個別の感情が見えます
           </div>
-          
+
           {/* 感情の内訳 */}
-          <div style={{ 
-            marginTop: '12px', 
-            paddingTop: '12px', 
+          <div style={{
+            marginTop: '12px',
+            paddingTop: '12px',
             borderTop: '1px solid #e0e0e0',
             fontSize: '12px',
             textAlign: 'left'

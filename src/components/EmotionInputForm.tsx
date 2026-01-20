@@ -5,15 +5,19 @@ interface EmotionInputFormProps {
   onSubmit: (emotion: EmotionType, intensity: number, userName: string) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialEmotion?: EmotionType;
+  initialIntensity?: number;
 }
 
 export const EmotionInputForm: React.FC<EmotionInputFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  initialEmotion,
+  initialIntensity,
 }) => {
-  const [selectedEmotion, setSelectedEmotion] = useState<EmotionType>('joy');
-  const [intensity, setIntensity] = useState<number>(50);
+  const [selectedEmotion, setSelectedEmotion] = useState<EmotionType>(initialEmotion || 'joy');
+  const [intensity, setIntensity] = useState<number>(initialIntensity || 50);
   const [userName, setUserName] = useState<string>('');
 
   // ローカルストレージから名前を読み込む

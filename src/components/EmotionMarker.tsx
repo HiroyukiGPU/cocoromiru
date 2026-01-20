@@ -24,6 +24,7 @@ export const EmotionMarker: React.FC<EmotionMarkerProps> = ({ data, onClick }) =
         box-shadow: 0 2px 8px ${weather.color}60;
         transition: all 0.3s ease;
         border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
         cursor: pointer;
       "></div>
     `,

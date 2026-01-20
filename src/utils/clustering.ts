@@ -44,17 +44,17 @@ const valueToEmotion = (value: number): EmotionType => {
 // 平均感情を計算
 const calculateAverageEmotion = (emotions: EmotionData[]): EmotionType => {
   if (emotions.length === 0) return 'joy';
-  
+
   const sum = emotions.reduce((acc, e) => acc + emotionToValue(e.emotion), 0);
   const average = sum / emotions.length;
-  
+
   return valueToEmotion(average);
 };
 
 // 平均強度を計算
 const calculateAverageIntensity = (emotions: EmotionData[]): number => {
   if (emotions.length === 0) return 0;
-  
+
   const sum = emotions.reduce((acc, e) => acc + e.intensity, 0);
   return Math.round(sum / emotions.length);
 };
@@ -62,7 +62,9 @@ const calculateAverageIntensity = (emotions: EmotionData[]): number => {
 // ズームレベルに応じたクラスタリング距離を取得（km）
 // 視覚的に重なる場合のみクラスタリングするため、非常に狭い範囲に設定
 const getClusterDistance = (zoom: number): number => {
-  if (zoom >= 15) return 0; // ズーム15以上は完全に個別表示
+  if (zoom >= 18) return 0.01; // 10m
+  if (zoom >= 16) return 0.02; // 20m
+  if (zoom >= 15) return 0.05; // 50m
   if (zoom >= 14) return 0.5; // 0.5km = 500m（非常に近い場合のみ）
   if (zoom >= 13) return 1; // 1km
   if (zoom >= 12) return 2; // 2km
@@ -83,18 +85,18 @@ export const clusterEmotions = (
   zoom: number
 ): { clusters: ClusterData[]; individuals: EmotionData[] } => {
   const clusterDistance = getClusterDistance(zoom);
-  
+
   // ズームレベルが高い場合は個別表示
   if (clusterDistance === 0) {
     return { clusters: [], individuals: emotions };
   }
-  
+
   const clusters: ClusterData[] = [];
   const processed = new Set<string>();
-  
+
   emotions.forEach((emotion) => {
     if (processed.has(emotion.id)) return;
-    
+
     // 近くのポイントを探す
     const nearby = emotions.filter((e) => {
       if (processed.has(e.id)) return false;
@@ -106,13 +108,13 @@ export const clusterEmotions = (
       );
       return distance <= clusterDistance;
     });
-    
+
     // クラスターを作成
     if (nearby.length > 1) {
       // 中心座標を計算
       const centerLat = nearby.reduce((sum, e) => sum + e.location.lat, 0) / nearby.length;
       const centerLng = nearby.reduce((sum, e) => sum + e.location.lng, 0) / nearby.length;
-      
+
       clusters.push({
         id: `cluster-${emotion.id}`,
         lat: centerLat,
@@ -122,14 +124,14 @@ export const clusterEmotions = (
         averageIntensity: calculateAverageIntensity(nearby),
         count: nearby.length,
       });
-      
+
       nearby.forEach((e) => processed.add(e.id));
     }
   });
-  
+
   // クラスタリングされなかった個別のマーカー
   const individuals = emotions.filter((e) => !processed.has(e.id));
-  
+
   return { clusters, individuals };
 };
 
