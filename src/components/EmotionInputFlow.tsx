@@ -26,7 +26,7 @@ export const EmotionInputFlow: React.FC<EmotionInputFlowProps> = ({
             setIsEstimating(true);
             // Simulate acquiring usage data
             setTimeout(() => {
-                const emotions: EmotionType[] = ['tired', 'calm', 'joy', 'content', 'anxious'];
+                const emotions: EmotionType[] = ['joy', 'anger', 'sorrow', 'pleasure'];
                 const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
                 const randomIntensity = Math.floor(Math.random() * 30) + 50; // 50-80%
 
